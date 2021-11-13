@@ -1,0 +1,14 @@
+HTTP API
+========
+
+.. toctree::
+    :maxdepth: 1
+    :titlesonly:
+
+{% for link in service_links %}
+    {{ link }}
+{%- endfor %}
+
+{% for link in method_links %}
+    {{ link }}
+{%- endfor %}
