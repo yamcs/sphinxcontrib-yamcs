@@ -3,6 +3,7 @@ import shutil
 from pathlib import Path
 
 from sphinxcontrib.yamcs import autogen, lexers
+from sphinxcontrib.yamcs.javadoc import javadoc_role
 from sphinxcontrib.yamcs.options import OptionsDirective
 from sphinxcontrib.yamcs.proto import (
     ProtoDirective,
@@ -58,6 +59,8 @@ def setup(app):
 
     app.add_lexer("uritemplate", lexers.URITemplateLexer)
     app.add_lexer("urivariable", lexers.URIVariableLexer)
+
+    app.add_role("javadoc", javadoc_role)
 
     app.connect("config-inited", config_inited)
     app.connect("env-before-read-docs", env_before_read_docs)
