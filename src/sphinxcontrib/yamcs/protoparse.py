@@ -79,10 +79,10 @@ class ProtoParser:
     package_by_symbol = {}
 
     def __init__(self, data):
-        proto = descriptor_pb2.FileDescriptorSet()
-        proto.ParseFromString(data)
+        self.proto = descriptor_pb2.FileDescriptorSet()
+        self.proto.ParseFromString(data)
 
-        for file in proto.file:
+        for file in self.proto.file:
             for service in file.service:
                 symbol = ".{}.{}".format(file.package, service.name)
                 self.descriptors_by_symbol[symbol] = service
@@ -303,5 +303,5 @@ class ProtoParser:
         buf += "}\n"
         return buf
 
-    def message_name(symbol):
+    def message_name(self, symbol):
         return symbol[symbol.rfind(".") + 1 :]

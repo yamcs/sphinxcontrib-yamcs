@@ -67,25 +67,14 @@ def create_websocket_file(symbol, method, filename, has_related):
         f.write(text)
 
 
-if __name__ == "__main__":
-    destdir = Path(sys.argv[2])
-    destdir.mkdir(exist_ok=True)
-
-    with open(sys.argv[1], "rb") as f:
-        data = f.read()
-
-    parser = ProtoParser(data)
-
-    proto = descriptor_pb2.FileDescriptorSet()
-    proto.ParseFromString(data)
-
+def generate(parser, destdir, title):
     service_count = 0
-    for file in proto.file:
+    for file in parser.proto.file:
         service_count += len(file.service)
 
     service_links = []
     method_links = []
-    for file in proto.file:
+    for file in parser.proto.file:
         for service in file.service:
             if service_count > 1:
                 servicedir = Path(
@@ -129,6 +118,7 @@ if __name__ == "__main__":
     text = YamcsReSTRenderer().render(
         "index.rst_t",
         {
+            "title": title,
             "service_links": service_links,
             "method_links": method_links,
         },

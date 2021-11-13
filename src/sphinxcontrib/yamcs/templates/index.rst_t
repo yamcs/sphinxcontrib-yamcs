@@ -1,11 +1,10 @@
-HTTP API
-========
+{{ title | heading(1) }}
 
 .. toctree::
     :maxdepth: 1
     :titlesonly:
 
-{% for link in service_links %}
+{%- for link in service_links %}
     {{ link }}
 {%- endfor %}
 
