@@ -4,6 +4,26 @@
     :maxdepth: 1
     :titlesonly:
 
+{%- if additional_docs %}
+{% for additional_doc in additional_docs %}
+    {{ additional_doc }}
+{%- endfor %}
+
+.. toctree::
+    :maxdepth: 1
+    :titlesonly:
+    :caption: Methods
+
+{% for link in service_links %}
+    {{ link }}
+{%- endfor %}
+
+{% for link in method_links %}
+    {{ link }}
+{%- endfor %}
+
+
+{% else %}
 {%- for link in service_links %}
     {{ link }}
 {%- endfor %}
@@ -11,3 +31,6 @@
 {% for link in method_links %}
     {{ link }}
 {%- endfor %}
+
+
+{% endif %}

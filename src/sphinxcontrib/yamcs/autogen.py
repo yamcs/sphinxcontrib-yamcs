@@ -67,20 +67,21 @@ def create_websocket_file(symbol, method, filename, has_related):
         f.write(text)
 
 
-def generate(parser, destdir, title):
+def generate(parser, destdir, title, additional_docs):
     service_count = 0
     for file in parser.proto.file:
         service_count += len(file.service)
 
     service_links = []
     method_links = []
+    generated_files = []
     for file in parser.proto.file:
         for service in file.service:
             if service_count > 1:
-                servicedir = Path(
-                    destdir, camel_to_slug(service.name).replace("-api", "")
-                )
+                servicedirname = camel_to_slug(service.name).replace("-api", "")
+                servicedir = Path(destdir, servicedirname)
                 servicedir.mkdir(exist_ok=True)
+                generated_files.append(servicedirname)
 
                 servicefile = os.path.join(servicedir, "index.rst")
                 symbol = "." + file.package + "." + service.name
@@ -111,17 +112,27 @@ def generate(parser, destdir, title):
 
                     if method.options.HasExtension(annotations_pb2.route):
                         create_route_file(symbol, method, methodfile, has_related)
+                        generated_files.append(filename)
                     elif method.options.HasExtension(annotations_pb2.websocket):
                         create_websocket_file(symbol, method, methodfile, has_related)
+                        generated_files.append(filename)
 
     service_links.sort()
     text = YamcsReSTRenderer().render(
         "index.rst_t",
         {
             "title": title,
+            "additional_docs": additional_docs,
             "service_links": service_links,
             "method_links": method_links,
         },
     )
-    with FileAvoidWrite(os.path.join(destdir, "index.rst")) as f:
+    indexfile = os.path.join(destdir, "index.rst")
+    with FileAvoidWrite(indexfile) as f:
         f.write(text)
+    generated_files.append("index.rst")
+
+    with Path(destdir, ".autogen").open("w") as f:
+        for file in generated_files:
+            f.write(file)
+            f.write("\n")
