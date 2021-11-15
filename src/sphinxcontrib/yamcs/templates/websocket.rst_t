@@ -4,7 +4,7 @@
 
 .. rubric:: WebSocket
 
-This method requires to upgrade an HTTP connection to WebSocket. See details on :yamcs-http-api:`how Yamcs uses WebSocket <websocket>`.
+This method requires to upgrade an HTTP connection to WebSocket. See details on `how Yamcs uses WebSocket <https://docs.yamcs.org/yamcs-http-api/websocket>`_.
 
 Use the message type ``{{ websocket_options.topic }}``.
 
