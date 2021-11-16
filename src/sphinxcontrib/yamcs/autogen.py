@@ -1,12 +1,10 @@
 import os
 import re
-import sys
 from pathlib import Path
 
-from google.protobuf import descriptor_pb2
 from sphinx.util.osutil import FileAvoidWrite
 from sphinx.util.template import ReSTRenderer
-from sphinxcontrib.yamcs.protoparse import ProtoParser
+from sphinxcontrib.yamcs import templates
 
 from yamcs.api import annotations_pb2
 
@@ -27,7 +25,7 @@ def replace(a, b, c):
 
 class YamcsReSTRenderer(ReSTRenderer):
     def __init__(self):
-        super().__init__(os.path.join(os.path.dirname(__file__), "templates"))
+        super().__init__()
         self.env.filters["slug"] = camel_to_slug
         self.env.filters["replace"] = replace
         self.env.filters["titlecase"] = titlecase
@@ -38,7 +36,7 @@ def create_service_file(symbol, service, filename):
         "symbol": symbol,
         "service": service,
     }
-    text = YamcsReSTRenderer().render("service.rst_t", context)
+    text = YamcsReSTRenderer().render_string(templates.service, context)
     with FileAvoidWrite(filename) as f:
         f.write(text)
 
@@ -50,7 +48,7 @@ def create_route_file(symbol, method, filename, has_related):
         "has_related": has_related,
         "route_options": method.options.Extensions[annotations_pb2.route],
     }
-    text = YamcsReSTRenderer().render("route.rst_t", context)
+    text = YamcsReSTRenderer().render_string(templates.route, context)
     with FileAvoidWrite(filename) as f:
         f.write(text)
 
@@ -62,7 +60,7 @@ def create_websocket_file(symbol, method, filename, has_related):
         "has_related": has_related,
         "websocket_options": method.options.Extensions[annotations_pb2.websocket],
     }
-    text = YamcsReSTRenderer().render("websocket.rst_t", context)
+    text = YamcsReSTRenderer().render_string(templates.websocket, context)
     with FileAvoidWrite(filename) as f:
         f.write(text)
 
@@ -118,8 +116,8 @@ def generate(parser, destdir, title, additional_docs):
                         generated_files.append(filename)
 
     service_links.sort()
-    text = YamcsReSTRenderer().render(
-        "index.rst_t",
+    text = YamcsReSTRenderer().render_string(
+        templates.index,
         {
             "title": title,
             "additional_docs": additional_docs,
