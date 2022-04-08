@@ -3,6 +3,7 @@ from google.protobuf import descriptor_pb2
 from yamcs.api import annotations_pb2
 
 DEFAULT_EXCLUDES = [
+    ".google.protobuf.Duration",
     ".google.protobuf.Struct",
     ".google.protobuf.Timestamp",
     ".yamcs.api.HttpBody",
@@ -235,7 +236,9 @@ class ProtoParser:
                 key_type = self.describe_field_type(nested_type.field[0])
                 value_type = self.describe_field_type(nested_type.field[1])
                 return "{[key: " + key_type + "]: " + value_type + "}"
-            if field.type_name == ".google.protobuf.Timestamp":
+            if field.type_name == ".google.protobuf.Duration":
+                return "string"
+            elif field.type_name == ".google.protobuf.Timestamp":
                 return "string"
             elif field.type_name == ".google.protobuf.Struct":
                 return "{[key: string]: any}"
@@ -291,7 +294,9 @@ class ProtoParser:
                 buf += "  // Base64"
             elif field.type == descriptor_pb2.FieldDescriptorProto.TYPE_MESSAGE:
                 if field.type_name == ".google.protobuf.Timestamp":
-                    buf += "  // RFC 3339"
+                    buf += "  // RFC 3339 timestamp"
+                elif field.type_name == ".google.protobuf.Duration":
+                    buf += " // Duration in seconds. Example: \"3s\" or \"3.001s\""
             elif field.type == descriptor_pb2.FieldDescriptorProto.TYPE_INT64:
                 buf += "  // String decimal"
             elif field.type == descriptor_pb2.FieldDescriptorProto.TYPE_UINT64:
