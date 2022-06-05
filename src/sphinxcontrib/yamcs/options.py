@@ -31,48 +31,82 @@ class OptionsDirective(SphinxDirective):
     def run(self):
         result = []
         yaml_file = self.arguments[0]
-
-        dl_items = []
         with open(yaml_file) as f:
             descriptor = yaml.load(f, Loader=yaml.FullLoader)
-            for option_name, option in descriptor["options"].items():
-                term_nodes = [
-                    nodes.literal("", option_name),
-                    nodes.Text(" ("),
-                    nodes.Text(option["type"].lower()),
-                    nodes.Text(")"),
-                ]
+            options = descriptor["options"].items()
+            head = []
+            tail = []
+            self.generate_nodes(options, head=head, tail=tail)
+            result += head + tail
+        return result
 
-                definition_nodes = []
-
-                if "deprecationMessage" in option:
-                    continue
-
-                if "description" in option:
-                    for para in option["description"]:
-                        definition_nodes.append(nodes.paragraph(text=para))
-
-                if "default" in option:
-                    default_value = option["default"]
-                    if option["type"] == "BOOLEAN":  # True, False ==> true, false
-                        default_value = str(default_value).lower()
-                    default_nodes = [
-                        nodes.Text("Default: "),
-                        nodes.literal("", default_value),
-                    ]
-                    definition_nodes.append(nodes.paragraph("", "", *default_nodes))
-
-                # TODO, should become rubrics
-                if option["type"] == "LIST":
-                    continue
-
-                dl_items.append(
-                    nodes.definition_list_item(
-                        "",
-                        nodes.term("", "", *term_nodes),
-                        nodes.definition("", *definition_nodes),
-                    )
+    def generate_nodes(self, options, head, tail):
+        head_items = []
+        for option_name, option in options:
+            type_string = option["type"]
+            if option["type"] == "LIST":
+                type_string += " of " + option["elementType"] + "s"
+            elif option["type"] == "LIST_OR_ELEMENT":
+                type_string = (
+                    option["elementType"] + " or list of " + option["elementType"] + "s"
                 )
 
-        result += [nodes.definition_list("", *dl_items)]
-        return result
+            term_nodes = [
+                nodes.literal("", option_name),
+                nodes.Text(" ("),
+                nodes.Text(type_string.lower()),
+                nodes.Text(")"),
+            ]
+
+            definition_nodes = []
+
+            if "deprecationMessage" in option:
+                continue
+
+            if "description" in option:
+                for para in option["description"]:
+                    definition_nodes.append(nodes.paragraph(text=para))
+
+            if "default" in option:
+                default_value = option["default"]
+                if option["type"] == "BOOLEAN":  # True, False ==> true, false
+                    default_value = str(default_value).lower()
+                default_nodes = [
+                    nodes.Text("Default: "),
+                    nodes.literal("", default_value),
+                ]
+                definition_nodes.append(nodes.paragraph("", "", *default_nodes))
+
+            if option["type"] == "MAP":
+                title = option.get("title", option_name) + " sub-configuration"
+                definition_nodes.append(
+                    nodes.paragraph(text='See "' + title + '" section below.')
+                )
+                tail += [nodes.rubric("", title)]
+                new_tail = []
+                self.generate_nodes(
+                    option["suboptions"].items(), head=tail, tail=new_tail
+                )
+                tail += new_tail
+
+            if option["type"] == "LIST" or option["type"] == "LIST_OR_ELEMENT":
+                if option["elementType"] == "MAP":
+                    title = option.get("title", option_name) + " sub-configuration"
+                    definition_nodes.append(
+                        nodes.paragraph(text='See "' + title + '" section below.')
+                    )
+                    tail += [nodes.rubric("", title)]
+                    new_tail = []
+                    self.generate_nodes(
+                        option["suboptions"].items(), head=tail, tail=new_tail
+                    )
+                    tail += new_tail
+
+            head.append(
+                nodes.definition_list_item(
+                    "",
+                    nodes.term("", "", *term_nodes),
+                    nodes.definition("", *definition_nodes),
+                )
+            )
+        head += [nodes.definition_list("", *head_items)]
