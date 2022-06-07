@@ -64,8 +64,28 @@ class OptionsDirective(SphinxDirective):
                 continue
 
             if "description" in option:
-                for para in option["description"]:
-                    definition_nodes.append(nodes.paragraph(text=para))
+                for idx, para in enumerate(option["description"]):
+                    para_nodes = []
+                    if idx == 0 and option.get("required", False):
+                        para_nodes.append(nodes.strong("", "Required."))
+                        para_nodes.append(nodes.Text(" "))
+                    para_nodes.append(nodes.Text(para))
+                    definition_nodes.append(nodes.paragraph("", "", *para_nodes))
+
+            if "choices" in option:
+                choices = option["choices"]
+                para_nodes = [nodes.Text("One of ")]
+                for idx, choice in enumerate(choices):
+                    if idx == 0:
+                        para_nodes += [nodes.literal("", str(choice))]
+                    elif idx < len(choices) - 1:
+                        para_nodes += [nodes.Text(", "), nodes.literal("", str(choice))]
+                    else:
+                        para_nodes += [
+                            nodes.Text(" or "),
+                            nodes.literal("", str(choice)),
+                        ]
+                definition_nodes.append(nodes.paragraph("", "", *para_nodes))
 
             if "default" in option:
                 default_value = option["default"]
