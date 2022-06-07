@@ -102,7 +102,7 @@ class OptionsDirective(SphinxDirective):
                     )
                     tail += new_tail
 
-            head.append(
+            head_items.append(
                 nodes.definition_list_item(
                     "",
                     nodes.term("", "", *term_nodes),
