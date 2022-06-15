@@ -51,6 +51,8 @@ class OptionsDirective(SphinxDirective):
                     option["elementType"] + " or list of " + option["elementType"] + "s"
                 )
 
+            deprecated = "deprecationMessage" in option
+
             term_nodes = [
                 nodes.literal("", option_name),
                 nodes.Text(" ("),
@@ -60,8 +62,14 @@ class OptionsDirective(SphinxDirective):
 
             definition_nodes = []
 
-            if "deprecationMessage" in option:
+            if option.get("hidden", False):
                 continue
+
+            if deprecated:
+                node = nodes.Text("Deprecated: " + option["deprecationMessage"])
+                definition_nodes.append(
+                    nodes.warning("", nodes.paragraph("", "", node))
+                )
 
             if "description" in option:
                 for idx, para in enumerate(option["description"]):
