@@ -32,10 +32,24 @@ class YamcsReSTRenderer(ReSTRenderer):
 
 
 def create_service_file(symbol, service, filename):
+    methods = []
+    for method in service.method:
+        route_options = method.options.Extensions[annotations_pb2.route]
+        if route_options.deprecated:
+            continue
+
+        ws_options = method.options.Extensions[annotations_pb2.websocket]
+        if ws_options.deprecated:
+            continue
+
+        methods.append(method)
+
     context = {
         "symbol": symbol,
         "service": service,
+        "methods": methods,
     }
+
     text = YamcsReSTRenderer().render_string(templates.service, context)
     with FileAvoidWrite(filename) as f:
         f.write(text)
@@ -90,6 +104,14 @@ def generate(parser, destdir, title, additional_docs):
                 service_links.append(servicedir.name + "/index")
 
                 for method in service.method:
+                    route_options = method.options.Extensions[annotations_pb2.route]
+                    if route_options.deprecated:
+                        continue
+
+                    ws_options = method.options.Extensions[annotations_pb2.websocket]
+                    if ws_options.deprecated:
+                        continue
+
                     filename = camel_to_slug(method.name) + ".rst"
                     methodfile = os.path.join(servicedir, filename)
                     symbol = "." + file.package + "." + service.name + "." + method.name
@@ -103,6 +125,14 @@ def generate(parser, destdir, title, additional_docs):
                         create_websocket_file(symbol, method, methodfile, has_related)
             else:
                 for method in service.method:
+                    route_options = method.options.Extensions[annotations_pb2.route]
+                    if route_options.deprecated:
+                        continue
+
+                    ws_options = method.options.Extensions[annotations_pb2.websocket]
+                    if ws_options.deprecated:
+                        continue
+
                     filename = camel_to_slug(method.name) + ".rst"
                     methodfile = Path(destdir, filename)
                     symbol = "." + file.package + "." + service.name + "." + method.name

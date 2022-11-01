@@ -68,7 +68,7 @@ service = r"""{{ service.name | titlecase | replace(' Api', '') | heading(1) }}
 .. toctree::
     :maxdepth: 1
     :caption: Methods
-{% for method in service.method %}
+{% for method in methods %}
     {{ method.name | slug }}
 {%- endfor %}
 """
