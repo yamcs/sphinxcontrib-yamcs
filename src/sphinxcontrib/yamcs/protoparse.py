@@ -296,7 +296,7 @@ class ProtoParser:
                 if field.type_name == ".google.protobuf.Timestamp":
                     buf += "  // RFC 3339 timestamp"
                 elif field.type_name == ".google.protobuf.Duration":
-                    buf += " // Duration in seconds. Example: \"3s\" or \"3.001s\""
+                    buf += ' // Duration in seconds. Example: "3s" or "3.001s"'
             elif field.type == descriptor_pb2.FieldDescriptorProto.TYPE_INT64:
                 buf += "  // String decimal"
             elif field.type == descriptor_pb2.FieldDescriptorProto.TYPE_UINT64:

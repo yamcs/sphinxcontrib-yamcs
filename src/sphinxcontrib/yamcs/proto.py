@@ -61,22 +61,28 @@ class RPCDirective(CodeBlock):
 
         self.content = []
         if "input" in self.options:
-            excluded_fields = []
+            if body_symbol == ".google.protobuf.Struct":
+                self.content.append("{[key: string]: any}")
+            else:
+                excluded_fields = []
 
-            if descriptor.options.HasExtension(annotations_pb2.route):
-                route = get_route_for_method_descriptor(descriptor)
-                # Remove route params from the message. Transcoding
-                # fetches them from the URL directly
-                excluded_fields += get_route_params(route)
+                if descriptor.options.HasExtension(annotations_pb2.route):
+                    route = get_route_for_method_descriptor(descriptor)
+                    # Remove route params from the message. Transcoding
+                    # fetches them from the URL directly
+                    excluded_fields += get_route_params(route)
 
-            self.content.append(
-                parser.describe_message(
-                    body_symbol,
-                    excluded_fields=excluded_fields,
+                self.content.append(
+                    parser.describe_message(
+                        body_symbol,
+                        excluded_fields=excluded_fields,
+                    )
                 )
-            )
         if "output" in self.options:
-            self.content.append(parser.describe_message(descriptor.output_type))
+            if body_symbol == ".google.protobuf.Struct":
+                self.content.append("{[key: string]: any}")
+            else:
+                self.content.append(parser.describe_message(descriptor.output_type))
         if "related" in self.options:
             for related_type in parser.find_types_related_to_method(symbol):
                 self.content.append(parser.describe_message(related_type))
