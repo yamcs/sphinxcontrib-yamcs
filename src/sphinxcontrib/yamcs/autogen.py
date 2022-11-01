@@ -39,6 +39,7 @@ def create_service_file(symbol, service, filename):
     text = YamcsReSTRenderer().render_string(templates.service, context)
     with FileAvoidWrite(filename) as f:
         f.write(text)
+        f.write("\n")
 
 
 def create_route_file(symbol, method, filename, has_related):
@@ -51,6 +52,7 @@ def create_route_file(symbol, method, filename, has_related):
     text = YamcsReSTRenderer().render_string(templates.route, context)
     with FileAvoidWrite(filename) as f:
         f.write(text)
+        f.write("\n")
 
 
 def create_websocket_file(symbol, method, filename, has_related):
@@ -63,6 +65,7 @@ def create_websocket_file(symbol, method, filename, has_related):
     text = YamcsReSTRenderer().render_string(templates.websocket, context)
     with FileAvoidWrite(filename) as f:
         f.write(text)
+        f.write("\n")
 
 
 def generate(parser, destdir, title, additional_docs):
@@ -128,6 +131,7 @@ def generate(parser, destdir, title, additional_docs):
     indexfile = os.path.join(destdir, "index.rst")
     with FileAvoidWrite(indexfile) as f:
         f.write(text)
+        f.write("\n")
     generated_files.append("index.rst")
 
     with Path(destdir, ".autogen").open("w") as f:
