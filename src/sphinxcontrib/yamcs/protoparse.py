@@ -29,6 +29,10 @@ def path_to_symbol(file, path):
                 idx = next(items)
                 reltype, relto = "service", relto.service[idx]
                 symbol += "." + relto.name
+            elif item == 7:  # Extension
+                idx = next(items)
+                reltype, relto = "extension", relto.extension[idx]
+                symbol += "." + relto.name
             elif item == 8:  # FileOptions
                 pass
             elif item == 9:  # SourceCodeInfo
