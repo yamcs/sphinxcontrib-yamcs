@@ -61,7 +61,7 @@ route = r"""{{ method.name | titlecase | heading(1) }}
 """
 
 
-service = r"""{{ service.name | titlecase | replace(' Api', '') | heading(1) }}
+service = r"""{{ service_name | heading(1) }}
 
 .. service:: {{ symbol }}
 

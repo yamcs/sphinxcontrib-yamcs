@@ -4,9 +4,9 @@ from pathlib import Path
 
 from sphinx.util.osutil import FileAvoidWrite
 from sphinx.util.template import ReSTRenderer
-from sphinxcontrib.yamcs import templates
-
 from yamcs.api import annotations_pb2
+
+from sphinxcontrib.yamcs import templates
 
 
 def camel_to_slug(name, sep="-", lower=True):
@@ -44,9 +44,15 @@ def create_service_file(symbol, service, filename):
 
         methods.append(method)
 
+    service_name = titlecase(service.name.replace("Api", ""))
+    label = service.options.Extensions[annotations_pb2.label]
+    if label:
+        service_name = label
+
     context = {
         "symbol": symbol,
         "service": service,
+        "service_name": service_name,
         "methods": methods,
     }
 
