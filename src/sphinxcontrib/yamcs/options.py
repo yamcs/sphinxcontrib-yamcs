@@ -27,13 +27,23 @@ def produce_nodes(state, rst_text):
 
 class OptionsDirective(SphinxDirective):
     required_arguments = 1
+    option_spec = {"scope": str}
 
     def run(self):
+        conf_key = "options"
+        if "scope" in self.options:
+            if self.options["scope"] == "global":
+                conf_key = "options"
+            if self.options["scope"] == "instance":
+                conf_key = "instanceOptions"
+            else:
+                raise Exception(f"Unexpected scope {conf_key}")
+
         result = []
         yaml_file = self.arguments[0]
         with open(yaml_file) as f:
             descriptor = yaml.load(f, Loader=yaml.FullLoader)
-            options = descriptor["options"].items()
+            options = descriptor[conf_key].items()
             head = []
             tail = []
             self.generate_nodes(options, head=head, tail=tail)
