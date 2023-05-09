@@ -10,6 +10,6 @@ def javadoc_role(role, rawtext, text, lineno, inliner, options={}, content=[]):
     else:
         label = text
 
-    ref = "https://yamcs.org/javadoc/yamcs/%s.html" % text.replace(".", "/")
+    ref = "https://docs.yamcs.org/javadoc/yamcs/latest/%s.html" % text.replace(".", "/")
     node = nodes.reference(rawtext, utils.unescape(label), refuri=ref, **options)
     return [node], []
