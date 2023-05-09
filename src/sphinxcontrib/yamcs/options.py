@@ -76,9 +76,11 @@ class OptionsDirective(SphinxDirective):
                 continue
 
             if deprecated:
-                node = nodes.Text("Deprecated: " + option["deprecationMessage"])
+                para_nodes = [nodes.Text("Deprecated.")]
+                para_nodes += produce_nodes(self.state, option["deprecationMessage"])
+                # node = nodes.Text("Deprecated: " + option["deprecationMessage"])
                 definition_nodes.append(
-                    nodes.warning("", nodes.paragraph("", "", node))
+                    nodes.warning("", nodes.paragraph("", "", *para_nodes))
                 )
 
             if "description" in option:
