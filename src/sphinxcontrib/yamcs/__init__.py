@@ -10,6 +10,7 @@ from sphinxcontrib.yamcs.color import (
     visit_color_node_html,
     visit_color_node_latex,
 )
+from sphinxcontrib.yamcs.fulltoc import html_page_context
 from sphinxcontrib.yamcs.javadoc import javadoc_role
 from sphinxcontrib.yamcs.opi import OpiDirective
 from sphinxcontrib.yamcs.options import OptionsDirective
@@ -97,3 +98,4 @@ def setup(app):
 
     app.connect("config-inited", config_inited)
     app.connect("env-before-read-docs", env_before_read_docs)
+    app.connect("html-page-context", html_page_context)
