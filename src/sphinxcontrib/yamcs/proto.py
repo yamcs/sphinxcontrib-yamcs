@@ -5,7 +5,6 @@ from docutils.statemachine import ViewList
 from sphinx.directives.code import CodeBlock
 from sphinx.util.docutils import SphinxDirective
 from sphinx.util.nodes import nested_parse_with_titles
-
 from yamcs.api import annotations_pb2
 
 
@@ -93,11 +92,11 @@ class RPCDirective(CodeBlock):
 def produce_nodes(state, rst_text):
     # Deindent small indents to not trigger unwanted rst
     # blockquotes. This uses a simple algorithm that only
-    # keeps indents in multiples of 4.
+    # keeps indents in multiples of 2.
     deindented = []
     for line in rst_text.splitlines():
         indent_size = len(line) - len(line.lstrip())
-        allowed_indent = int(indent_size / 4) * "    "
+        allowed_indent = int(indent_size / 2) * "  "
         deindented.append(allowed_indent + line.lstrip())
 
     unprocessed = ViewList()
