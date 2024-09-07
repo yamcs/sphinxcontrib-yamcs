@@ -4,7 +4,7 @@ import setuptools
 
 setuptools.setup(
     name="sphinxcontrib-yamcs",
-    version="1.2.8",
+    version="1.2.9",
     license="BSD",
     description="Sphinx extensions for use within the Yamcs project.",
     author="Space Applications Services",
@@ -15,7 +15,7 @@ setuptools.setup(
     namespace_packages=["sphinxcontrib"],
     include_package_data=True,
     install_requires=["yamcs-client", "Sphinx>=4.0.0", "pyyaml"],
-    python_requires=">=3.6",
+    python_requires=">=3.7",
     zip_safe=False,
     platforms="any",
     classifiers=[
