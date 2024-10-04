@@ -19,18 +19,31 @@ class ProtoDirective(CodeBlock):
         self.content = [parser.describe_message(symbol)]
 
 
+def get_uri_templates_for_method_descriptor(descriptor):
+    route = descriptor.options.Extensions[annotations_pb2.route]
+    uri_templates = [get_uri_template_for_route(route)]
+    for route in route.additional_bindings:
+        if not route.deprecated:
+            uri_templates.append(get_uri_template_for_route(route))
+    return uri_templates
+
+
 def get_route_for_method_descriptor(descriptor, addmethod=True):
     route_options = descriptor.options.Extensions[annotations_pb2.route]
-    if route_options.HasField("post"):
-        return "POST " + route_options.post if addmethod else route_options.post
-    if route_options.HasField("get"):
-        return "GET " + route_options.get if addmethod else route_options.get
-    if route_options.HasField("delete"):
-        return "DELETE " + route_options.delete if addmethod else route_options.delete
-    if route_options.HasField("put"):
-        return "PUT " + route_options.put if addmethod else route_options.put
-    if route_options.HasField("patch"):
-        return "PATCH " + route_options.patch if addmethod else route_options.patch
+    return get_uri_template_for_route(route_options, addmethod=addmethod)
+
+
+def get_uri_template_for_route(route, addmethod=True):
+    if route.HasField("post"):
+        return "POST " + route.post if addmethod else route.post
+    if route.HasField("get"):
+        return "GET " + route.get if addmethod else route.get
+    if route.HasField("delete"):
+        return "DELETE " + route.delete if addmethod else route.delete
+    if route.HasField("put"):
+        return "PUT " + route.put if addmethod else route.put
+    if route.HasField("patch"):
+        return "PATCH " + route.patch if addmethod else route.patch
     return None
 
 
@@ -177,16 +190,20 @@ class RouteDirective(SphinxDirective):
             )
 
         route_options = descriptor.options.Extensions[annotations_pb2.route]
-        route_text = get_route_for_method_descriptor(descriptor)
 
         raw = ".. rubric:: URI Template\n"
-        raw += ".. code-block:: uritemplate\n\n"
-        raw += "    " + route_text + "\n"
+        uri_templates = get_uri_templates_for_method_descriptor(descriptor)
+        for idx, uri_template in enumerate(uri_templates):
+            if idx > 0:
+                raw += "\n\n"
+            raw += ".. code-block:: uritemplate\n\n"
+            raw += "    " + uri_template + "\n\n"
 
         result += produce_nodes(self.state, raw)
 
         input_descriptor = parser.descriptors_by_symbol[descriptor.input_type]
 
+        route_text = uri_templates[0]
         route_params = get_route_params(route_text)
         if route_params:
             dl_items = []
