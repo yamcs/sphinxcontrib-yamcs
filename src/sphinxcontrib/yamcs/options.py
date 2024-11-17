@@ -87,9 +87,11 @@ class OptionsDirective(SphinxDirective):
                 for idx, para in enumerate(option["description"]):
                     para_nodes = []
                     if idx == 0 and option.get("required", False):
-                        para_nodes.append(nodes.strong("", "Required."))
-                        para_nodes.append(nodes.Text(" "))
-                    para_nodes.append(nodes.Text(para))
+                        para = "Required. " + para
+                        para_nodes += produce_nodes(self.state, para)
+                    else:
+                        para_nodes += produce_nodes(self.state, para)
+
                     definition_nodes.append(nodes.paragraph("", "", *para_nodes))
 
             if "choices" in option:
