@@ -87,7 +87,7 @@ class OptionsDirective(SphinxDirective):
                 for idx, para in enumerate(option["description"]):
                     para_nodes = []
                     if idx == 0 and option.get("required", False):
-                        para = "Required. " + para
+                        para = "**Required.** " + para
                         para_nodes += produce_nodes(self.state, para)
                     else:
                         para_nodes += produce_nodes(self.state, para)
