@@ -4,8 +4,8 @@ index = r"""{{ title | heading(1) }}
     :maxdepth: 1
     :titlesonly:
 
-{%- if additional_docs %}
-{% for additional_doc in additional_docs %}
+{% if additional_docs %}
+{%- for additional_doc in additional_docs %}
     {{ additional_doc }}
 {%- endfor %}
 
