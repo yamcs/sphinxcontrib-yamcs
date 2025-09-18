@@ -37,7 +37,7 @@ index = r"""{{ title | heading(1) }}
 """
 
 
-route = r"""{{ method.name | titlecase | heading(1) }}
+route = r"""{{ method_name | heading(1) }}
 
 .. route:: {{ symbol }}
 
@@ -74,7 +74,7 @@ service = r"""{{ service_name | heading(1) }}
 """
 
 
-websocket = r"""{{ method.name | titlecase | heading(1) }}
+websocket = r"""{{ method_name | heading(1) }}
 
 .. websocket:: {{ symbol }}
 

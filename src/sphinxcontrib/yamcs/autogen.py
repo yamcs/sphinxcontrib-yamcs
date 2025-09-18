@@ -63,9 +63,15 @@ def create_service_file(symbol, service, filename):
 
 
 def create_route_file(symbol, method, filename, has_related):
+    method_name = titlecase(method.name)
+    label = method.options.Extensions[annotations_pb2.route].label
+    if label:
+        method_name = label
+
     context = {
         "symbol": symbol,
         "method": method,
+        "method_name": method_name,
         "has_related": has_related,
         "route_options": method.options.Extensions[annotations_pb2.route],
     }
@@ -76,9 +82,15 @@ def create_route_file(symbol, method, filename, has_related):
 
 
 def create_websocket_file(symbol, method, filename, has_related):
+    method_name = titlecase(method.name)
+    label = method.options.Extensions[annotations_pb2.websocket].label
+    if label:
+        method_name = label
+
     context = {
         "symbol": symbol,
         "method": method,
+        "method_name": method_name,
         "has_related": has_related,
         "websocket_options": method.options.Extensions[annotations_pb2.websocket],
     }
