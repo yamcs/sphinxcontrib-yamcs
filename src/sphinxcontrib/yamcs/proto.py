@@ -1,11 +1,15 @@
 import re
 
 from docutils import nodes
+from docutils.parsers import get_parser_class
 from docutils.statemachine import ViewList
+from docutils.utils import new_document
 from sphinx.directives.code import CodeBlock
 from sphinx.util.docutils import SphinxDirective
 from sphinx.util.nodes import nested_parse_with_titles
 from yamcs.api import annotations_pb2
+
+MystParser = get_parser_class("myst")
 
 
 class ProtoDirective(CodeBlock):
@@ -102,7 +106,22 @@ class RPCDirective(CodeBlock):
                 self.content.append(parser.describe_enum(related_enum))
 
 
-def produce_nodes(state, rst_text):
+def produce_nodes(state, text, markdown):
+    if markdown:
+        return produce_nodes_from_md(state, text)
+    else:
+        return produce_nodes_from_rst(state, text)
+
+
+def produce_nodes_from_md(state, md_text):
+    settings = state.document.settings
+    document = new_document("<markdown-input>", settings)
+    parser = MystParser()
+    parser.parse(md_text, document)
+    return list(document.children)
+
+
+def produce_nodes_from_rst(state, rst_text):
     # Deindent small indents to not trigger unwanted rst
     # blockquotes. This uses a simple algorithm that only
     # keeps indents in multiples of 2.
@@ -131,9 +150,14 @@ class WebSocketDirective(SphinxDirective):
         parser = self.env.protoparser
         descriptor = parser.descriptors_by_symbol[symbol]
 
+        # From the service, determine if we are to read Markdown
+        service_symbol = symbol.rsplit(".", 1)[0]
+        service_descriptor = parser.descriptors_by_symbol[service_symbol]
+        markdown = service_descriptor.options.Extensions[annotations_pb2.markdown]
+
         comment = parser.find_comment(symbol, prefix="")
         if comment:
-            result += produce_nodes(self.state, comment)
+            result += produce_nodes(self.state, comment, markdown)
 
         return result
 
@@ -147,9 +171,11 @@ class ServiceDirective(SphinxDirective):
         parser = self.env.protoparser
         descriptor = parser.descriptors_by_symbol[symbol]
 
+        markdown = descriptor.options.Extensions[annotations_pb2.markdown]
+
         comment = parser.find_comment(symbol, prefix="")
         if comment:
-            result += produce_nodes(self.state, comment)
+            result += produce_nodes(self.state, comment, markdown)
 
         return result
 
@@ -163,9 +189,14 @@ class RouteDirective(SphinxDirective):
         parser = self.env.protoparser
         descriptor = parser.descriptors_by_symbol[symbol]
 
+        # From the service, determine if we are to read Markdown
+        service_symbol = symbol.rsplit(".", 1)[0]
+        service_descriptor = parser.descriptors_by_symbol[service_symbol]
+        markdown = service_descriptor.options.Extensions[annotations_pb2.markdown]
+
         comment = parser.find_comment(symbol, prefix="")
         if comment:
-            result += produce_nodes(self.state, comment)
+            result += produce_nodes(self.state, comment, markdown)
 
         if descriptor.client_streaming:
             text = "This method uses client-streaming."
@@ -199,7 +230,7 @@ class RouteDirective(SphinxDirective):
             raw += ".. code-block:: uritemplate\n\n"
             raw += "    " + uri_template + "\n\n"
 
-        result += produce_nodes(self.state, raw)
+        result += produce_nodes_from_rst(self.state, raw)
 
         input_descriptor = parser.descriptors_by_symbol[descriptor.input_type]
 
@@ -215,7 +246,7 @@ class RouteDirective(SphinxDirective):
                     or ""
                 )
                 if comment:
-                    for child in produce_nodes(self.state, comment):
+                    for child in produce_nodes(self.state, comment, markdown):
                         comment_node += child
 
                 dl_items.append(
@@ -242,7 +273,7 @@ class RouteDirective(SphinxDirective):
                     comment_node = nodes.section()
                     comment = parser.find_comment(field_symbol, prefix="")
                     if comment:
-                        for child in produce_nodes(self.state, comment):
+                        for child in produce_nodes(self.state, comment, markdown):
                             comment_node += child
 
                     dl_items.append(
