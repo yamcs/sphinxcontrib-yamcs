@@ -209,16 +209,20 @@ class RouteDirective(SphinxDirective):
             dl_items = []
             for param in route_params:
                 param_template = get_route_param_template(route_text, param)
+                comment_node = nodes.section()
                 comment = (
                     parser.find_comment(descriptor.input_type + "." + param, prefix="")
                     or ""
                 )
+                if comment:
+                    for child in produce_nodes(self.state, comment):
+                        comment_node += child
 
                 dl_items.append(
                     nodes.definition_list_item(
                         "",
                         nodes.term("", "", nodes.literal("", param_template)),
-                        nodes.definition("", nodes.paragraph(text=comment)),
+                        nodes.definition("", comment_node),
                     )
                 )
 
