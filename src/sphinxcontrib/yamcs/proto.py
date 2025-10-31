@@ -112,17 +112,30 @@ class RPCDirective(CodeBlock):
                     # fetches them from the URL directly
                     excluded_fields += [p.param for p in get_route_params(route)]
 
-                self.content.append(
-                    parser.describe_message(
-                        body_symbol,
-                        excluded_fields=excluded_fields,
+                # Check if there's actually any body fields
+                body_descriptor = parser.descriptors_by_symbol[body_symbol]
+                body_fields = [
+                    f
+                    for f in body_descriptor.field
+                    if f.json_name not in excluded_fields
+                ]
+
+                if body_fields:
+                    self.content.append(
+                        parser.describe_message(
+                            body_symbol,
+                            excluded_fields=excluded_fields,
+                        )
                     )
-                )
+                else:
+                    self.content.append("// Not applicable")
+
         if "output" in self.options:
             if body_symbol == ".google.protobuf.Struct":
                 self.content.append("{[key: string]: any}")
             else:
                 self.content.append(parser.describe_message(descriptor.output_type))
+
         if "related" in self.options:
             for related_type in parser.find_types_related_to_method(symbol):
                 self.content.append(parser.describe_message(related_type))
