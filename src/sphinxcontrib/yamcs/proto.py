@@ -1,6 +1,8 @@
 import re
+from dataclasses import dataclass
 
 from docutils import nodes
+from docutils.core import publish_doctree
 from docutils.parsers import get_parser_class
 from docutils.statemachine import ViewList
 from docutils.utils import new_document
@@ -51,12 +53,34 @@ def get_uri_template_for_route(route, addmethod=True):
     return None
 
 
-def get_route_param_template(uri_template, param):
-    return re.search(r"(\{" + param + r"[\*\?]*\})", uri_template).group(1)
+@dataclass
+class RouteParam:
+    template: str
+    param: str
+    star: bool
+    optional: bool
+
+
+def simplify_uri_template(uri_template):
+    """
+    Removes ?, *, ** symbols from route parameters
+    """
+    return uri_template.replace("?}", "}").replace("**}", "}").replace("*}", "}")
 
 
 def get_route_params(uri_template):
-    return [p for p in re.findall(r"\{([^\}\*\?]*)[\*\?]*\}", uri_template)]
+    params = []
+    for match in re.finditer(r"\{([^\}\*\?]*)([\*\?]*)\}", uri_template):
+        params.append(
+            RouteParam(
+                template=match.group(0),
+                param=match.group(1),
+                star=match.group(2) in ("*", "**"),
+                optional=match.group(2) in ("?", "**"),
+            )
+        )
+
+    return params
 
 
 class RPCDirective(CodeBlock):
@@ -86,7 +110,7 @@ class RPCDirective(CodeBlock):
                     route = get_route_for_method_descriptor(descriptor)
                     # Remove route params from the message. Transcoding
                     # fetches them from the URL directly
-                    excluded_fields += get_route_params(route)
+                    excluded_fields += [p.param for p in get_route_params(route)]
 
                 self.content.append(
                     parser.describe_message(
@@ -228,7 +252,7 @@ class RouteDirective(SphinxDirective):
             if idx > 0:
                 raw += "\n\n"
             raw += ".. code-block:: uritemplate\n\n"
-            raw += "    " + uri_template + "\n\n"
+            raw += "    " + simplify_uri_template(uri_template) + "\n\n"
 
         result += produce_nodes_from_rst(self.state, raw)
 
@@ -238,21 +262,29 @@ class RouteDirective(SphinxDirective):
         route_params = get_route_params(route_text)
         if route_params:
             dl_items = []
-            for param in route_params:
-                param_template = get_route_param_template(route_text, param)
+            for route_param in route_params:
                 comment_node = nodes.section()
                 comment = (
-                    parser.find_comment(descriptor.input_type + "." + param, prefix="")
+                    parser.find_comment(
+                        descriptor.input_type + "." + route_param.param, prefix=""
+                    )
                     or ""
                 )
                 if comment:
                     for child in produce_nodes(self.state, comment, markdown):
                         comment_node += child
 
+                    if route_param.star:
+                        comment_node += produce_nodes_from_rst(
+                            self.state,
+                            "This route parameter may contain forward slashes. Alternatively "
+                            r"you may also use URL-encoded characters, such as ``%2F``",
+                        )
+
                 dl_items.append(
                     nodes.definition_list_item(
                         "",
-                        nodes.term("", "", nodes.literal("", param_template)),
+                        nodes.term("", "", nodes.literal("", route_param.param)),
                         nodes.definition("", comment_node),
                     )
                 )
@@ -262,7 +294,7 @@ class RouteDirective(SphinxDirective):
         if route_options.get:
             query_param_fields = []
             for field in input_descriptor.field:
-                if field.json_name not in route_params:
+                if field.json_name not in [p.param for p in route_params]:
                     query_param_fields.append(field)
 
             if query_param_fields:
