@@ -294,10 +294,17 @@ class RouteDirective(SphinxDirective):
                             r"you may also use URL-encoded characters, such as ``%2F``",
                         )
 
+                term_node = nodes.literal(
+                    "",
+                    "{" + route_param.param + "}",
+                    classes=["code", "uritemplate"],
+                    language="uritemplate",
+                )
+
                 dl_items.append(
                     nodes.definition_list_item(
                         "",
-                        nodes.term("", "", nodes.literal("", route_param.param)),
+                        nodes.term("", "", term_node),
                         nodes.definition("", comment_node),
                     )
                 )
