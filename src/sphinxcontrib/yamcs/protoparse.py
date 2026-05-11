@@ -1,4 +1,8 @@
-from google.protobuf import descriptor_pb2
+try:
+    from yamcs.protobuf._vendor.google.protobuf import descriptor_pb2
+except ImportError:
+    # yamcs-client < 2.0.0
+    from google.protobuf import descriptor_pb2
 
 from yamcs.api import annotations_pb2
 
