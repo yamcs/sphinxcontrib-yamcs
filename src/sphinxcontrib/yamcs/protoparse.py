@@ -1,10 +1,6 @@
-try:
-    from yamcs.protobuf._vendor.google.protobuf import descriptor_pb2
-except ImportError:
-    # yamcs-client < 2.0.0
-    from google.protobuf import descriptor_pb2
+from google.protobuf import descriptor_pb2
 
-from yamcs.api import annotations_pb2
+from sphinxcontrib.yamcs import annotations_pb2
 
 DEFAULT_EXCLUDES = [
     ".google.protobuf.Duration",
@@ -96,9 +92,9 @@ class ProtoParser:
                 symbol = ".{}.{}".format(file.package, service.name)
                 self.descriptors_by_symbol[symbol] = service
                 for method_type in service.method:
-                    self.descriptors_by_symbol[
-                        symbol + "." + method_type.name
-                    ] = method_type
+                    self.descriptors_by_symbol[symbol + "." + method_type.name] = (
+                        method_type
+                    )
 
             for message_type in file.message_type:
                 symbol = ".{}.{}".format(file.package, message_type.name)
@@ -106,14 +102,14 @@ class ProtoParser:
                 self.descriptors_by_symbol[symbol] = message_type
                 for enum_type in message_type.enum_type:
                     self.package_by_symbol[symbol] = file.package
-                    self.descriptors_by_symbol[
-                        symbol + "." + enum_type.name
-                    ] = enum_type
+                    self.descriptors_by_symbol[symbol + "." + enum_type.name] = (
+                        enum_type
+                    )
                 for nested_type in message_type.nested_type:
                     self.package_by_symbol[symbol] = file.package
-                    self.descriptors_by_symbol[
-                        symbol + "." + nested_type.name
-                    ] = nested_type
+                    self.descriptors_by_symbol[symbol + "." + nested_type.name] = (
+                        nested_type
+                    )
 
             for enum_type in file.enum_type:
                 symbol = ".{}.{}".format(file.package, enum_type.name)

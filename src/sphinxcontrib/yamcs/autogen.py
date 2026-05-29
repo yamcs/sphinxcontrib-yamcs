@@ -4,9 +4,8 @@ from pathlib import Path
 
 from sphinx.util.osutil import FileAvoidWrite
 from sphinx.util.template import ReSTRenderer
-from yamcs.api import annotations_pb2
 
-from sphinxcontrib.yamcs import templates
+from sphinxcontrib.yamcs import annotations_pb2, templates
 
 
 def camel_to_slug(name, sep="-", lower=True):

@@ -9,7 +9,8 @@ from docutils.utils import new_document
 from sphinx.directives.code import CodeBlock
 from sphinx.util.docutils import SphinxDirective
 from sphinx.util.nodes import nested_parse_with_titles
-from yamcs.api import annotations_pb2
+
+from sphinxcontrib.yamcs import annotations_pb2
 
 MystParser = get_parser_class("myst")
 

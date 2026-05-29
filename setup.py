@@ -14,7 +14,7 @@ setuptools.setup(
     package_dir={"": "src"},
     namespace_packages=["sphinxcontrib"],
     include_package_data=True,
-    install_requires=["yamcs-client>=1.12.0", "Sphinx>=4.0.0", "pyyaml", "myst-parser"],
+    install_requires=["protobuf", "Sphinx>=4.0.0", "pyyaml", "myst-parser"],
     python_requires=">=3.7",
     zip_safe=False,
     platforms="any",
