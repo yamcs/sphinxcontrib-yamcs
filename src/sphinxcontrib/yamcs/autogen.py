@@ -112,59 +112,57 @@ def create_websocket_file(symbol, method, filename, has_related):
 
 
 def generate(parser, destdir, title, additional_docs):
-    service_count = 0
+    doc_services = []
     for file in parser.proto.file:
-        service_count += len(file.service)
+        for service in file.service:
+            methods = documented_methods(service)
+            if methods:
+                doc_services.append((file, service, methods))
 
     service_links = []
     method_links = []
     generated_files = []
-    for file in parser.proto.file:
-        for service in file.service:
-            if service_count > 1:
-                methods = documented_methods(service)
-                if not methods:
-                    # Nothing to document
-                    continue
+    nest = len(doc_services) > 1
+    for file, service, methods in doc_services:
+        if nest:
+            servicedirname = camel_to_slug(service.name).replace("-api", "")
+            servicedir = Path(destdir, servicedirname)
+            servicedir.mkdir(exist_ok=True)
+            generated_files.append(servicedirname)
 
-                servicedirname = camel_to_slug(service.name).replace("-api", "")
-                servicedir = Path(destdir, servicedirname)
-                servicedir.mkdir(exist_ok=True)
-                generated_files.append(servicedirname)
+            servicefile = os.path.join(servicedir, "index.rst")
+            symbol = "." + file.package + "." + service.name
+            create_service_file(symbol, service, servicefile)
+            service_links.append(servicedir.name + "/index")
 
-                servicefile = os.path.join(servicedir, "index.rst")
-                symbol = "." + file.package + "." + service.name
-                create_service_file(symbol, service, servicefile)
-                service_links.append(servicedir.name + "/index")
+            for method in methods:
+                filename = camel_to_slug(method.name) + ".rst"
+                methodfile = os.path.join(servicedir, filename)
+                symbol = "." + file.package + "." + service.name + "." + method.name
+                related_types = parser.find_types_related_to_method(symbol)
+                related_enums = parser.find_enums_related_to_method(symbol)
+                has_related = len(related_types) > 0 or len(related_enums) > 0
 
-                for method in methods:
-                    filename = camel_to_slug(method.name) + ".rst"
-                    methodfile = os.path.join(servicedir, filename)
-                    symbol = "." + file.package + "." + service.name + "." + method.name
-                    related_types = parser.find_types_related_to_method(symbol)
-                    related_enums = parser.find_enums_related_to_method(symbol)
-                    has_related = len(related_types) > 0 or len(related_enums) > 0
+                if method.options.HasExtension(annotations_pb2.route):
+                    create_route_file(symbol, method, methodfile, has_related)
+                elif method.options.HasExtension(annotations_pb2.websocket):
+                    create_websocket_file(symbol, method, methodfile, has_related)
+        else:
+            for method in methods:
+                filename = camel_to_slug(method.name) + ".rst"
+                methodfile = Path(destdir, filename)
+                symbol = "." + file.package + "." + service.name + "." + method.name
+                related_types = parser.find_types_related_to_method(symbol)
+                related_enums = parser.find_enums_related_to_method(symbol)
+                has_related = len(related_types) > 0 or len(related_enums) > 0
+                method_links.append(camel_to_slug(method.name))
 
-                    if method.options.HasExtension(annotations_pb2.route):
-                        create_route_file(symbol, method, methodfile, has_related)
-                    elif method.options.HasExtension(annotations_pb2.websocket):
-                        create_websocket_file(symbol, method, methodfile, has_related)
-            else:
-                for method in documented_methods(service):
-                    filename = camel_to_slug(method.name) + ".rst"
-                    methodfile = Path(destdir, filename)
-                    symbol = "." + file.package + "." + service.name + "." + method.name
-                    related_types = parser.find_types_related_to_method(symbol)
-                    related_enums = parser.find_enums_related_to_method(symbol)
-                    has_related = len(related_types) > 0 or len(related_enums) > 0
-                    method_links.append(camel_to_slug(method.name))
-
-                    if method.options.HasExtension(annotations_pb2.route):
-                        create_route_file(symbol, method, methodfile, has_related)
-                        generated_files.append(filename)
-                    elif method.options.HasExtension(annotations_pb2.websocket):
-                        create_websocket_file(symbol, method, methodfile, has_related)
-                        generated_files.append(filename)
+                if method.options.HasExtension(annotations_pb2.route):
+                    create_route_file(symbol, method, methodfile, has_related)
+                    generated_files.append(filename)
+                elif method.options.HasExtension(annotations_pb2.websocket):
+                    create_websocket_file(symbol, method, methodfile, has_related)
+                    generated_files.append(filename)
 
     service_links.sort()
     text = YamcsReSTRenderer().render_string(
