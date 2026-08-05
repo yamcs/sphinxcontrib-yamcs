@@ -30,18 +30,30 @@ class YamcsReSTRenderer(ReSTRenderer):
         self.env.filters["titlecase"] = titlecase
 
 
-def create_service_file(symbol, service, filename):
+def documented_methods(service):
+    """
+    Methods that will actually get a generated route/websocket page:
+    non-deprecated, and carrying either a route or a websocket annotation.
+    """
     methods = []
     for method in service.method:
         route_options = method.options.Extensions[annotations_pb2.route]
-        if route_options.deprecated:
+        ws_options = method.options.Extensions[annotations_pb2.websocket]
+
+        if not method.options.HasExtension(
+            annotations_pb2.route
+        ) and not method.options.HasExtension(annotations_pb2.websocket):
             continue
 
-        ws_options = method.options.Extensions[annotations_pb2.websocket]
-        if ws_options.deprecated:
+        if route_options.deprecated or ws_options.deprecated:
             continue
 
         methods.append(method)
+    return methods
+
+
+def create_service_file(symbol, service, filename):
+    methods = documented_methods(service)
 
     service_name = titlecase(service.name.replace("Api", ""))
     label = service.options.Extensions[annotations_pb2.label]
@@ -110,6 +122,11 @@ def generate(parser, destdir, title, additional_docs):
     for file in parser.proto.file:
         for service in file.service:
             if service_count > 1:
+                methods = documented_methods(service)
+                if not methods:
+                    # Nothing to document
+                    continue
+
                 servicedirname = camel_to_slug(service.name).replace("-api", "")
                 servicedir = Path(destdir, servicedirname)
                 servicedir.mkdir(exist_ok=True)
@@ -120,15 +137,7 @@ def generate(parser, destdir, title, additional_docs):
                 create_service_file(symbol, service, servicefile)
                 service_links.append(servicedir.name + "/index")
 
-                for method in service.method:
-                    route_options = method.options.Extensions[annotations_pb2.route]
-                    if route_options.deprecated:
-                        continue
-
-                    ws_options = method.options.Extensions[annotations_pb2.websocket]
-                    if ws_options.deprecated:
-                        continue
-
+                for method in methods:
                     filename = camel_to_slug(method.name) + ".rst"
                     methodfile = os.path.join(servicedir, filename)
                     symbol = "." + file.package + "." + service.name + "." + method.name
@@ -141,15 +150,7 @@ def generate(parser, destdir, title, additional_docs):
                     elif method.options.HasExtension(annotations_pb2.websocket):
                         create_websocket_file(symbol, method, methodfile, has_related)
             else:
-                for method in service.method:
-                    route_options = method.options.Extensions[annotations_pb2.route]
-                    if route_options.deprecated:
-                        continue
-
-                    ws_options = method.options.Extensions[annotations_pb2.websocket]
-                    if ws_options.deprecated:
-                        continue
-
+                for method in documented_methods(service):
                     filename = camel_to_slug(method.name) + ".rst"
                     methodfile = Path(destdir, filename)
                     symbol = "." + file.package + "." + service.name + "." + method.name
