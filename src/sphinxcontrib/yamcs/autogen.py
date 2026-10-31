@@ -111,7 +111,14 @@ def create_websocket_file(symbol, method, filename, has_related):
         f.write("\n")
 
 
-def generate(parser, destdir, title, additional_docs):
+def generate(parser, destdir, title, additional_docs, index=True):
+    """
+    Generate service and method documents into destdir.
+
+    Returns the toctree entries (relative to destdir) of the top level
+    of generated documents. If index is true, these are also linked
+    from a generated index.rst.
+    """
     doc_services = []
     for file in parser.proto.file:
         for service in file.service:
@@ -165,22 +172,25 @@ def generate(parser, destdir, title, additional_docs):
                     generated_files.append(filename)
 
     service_links.sort()
-    text = YamcsReSTRenderer().render_string(
-        templates.index,
-        {
-            "title": title,
-            "additional_docs": additional_docs,
-            "service_links": service_links,
-            "method_links": method_links,
-        },
-    )
-    indexfile = os.path.join(destdir, "index.rst")
-    with FileAvoidWrite(indexfile) as f:
-        f.write(text)
-        f.write("\n")
-    generated_files.append("index.rst")
+    if index:
+        text = YamcsReSTRenderer().render_string(
+            templates.index,
+            {
+                "title": title,
+                "additional_docs": additional_docs,
+                "service_links": service_links,
+                "method_links": method_links,
+            },
+        )
+        indexfile = os.path.join(destdir, "index.rst")
+        with FileAvoidWrite(indexfile) as f:
+            f.write(text)
+            f.write("\n")
+        generated_files.append("index.rst")
 
     with Path(destdir, ".autogen").open("w") as f:
         for file in generated_files:
             f.write(file)
             f.write("\n")
+
+    return service_links + method_links

@@ -1,7 +1,8 @@
 import shutil
 from pathlib import Path
 
-from sphinxcontrib.yamcs import autogen, lexers
+from sphinxcontrib.yamcs import apitoc, autogen, lexers
+from sphinxcontrib.yamcs.apitoc import ApiTocTreeDirective
 from sphinxcontrib.yamcs.color import (
     color,
     color_role,
@@ -28,6 +29,7 @@ def config_inited(app, config):
     """
     Autogenerate GPB documents.
     """
+    app.yamcs_api_toc_links = []
     if config.yamcs_api_protobin:
         with open(config.yamcs_api_protobin, "rb") as f:
             data = f.read()
@@ -55,8 +57,11 @@ def config_inited(app, config):
         parser = ProtoParser(data)
         title = app.config.yamcs_api_title
         additional_docs = app.config.yamcs_api_additional_docs
+        index = app.config.yamcs_api_index
 
-        autogen.generate(parser, destdir, title, additional_docs)
+        links = autogen.generate(parser, destdir, title, additional_docs, index)
+        prefix = Path(app.config.yamcs_api_destdir).as_posix()
+        app.yamcs_api_toc_links = [f"{prefix}/{link}" for link in links]
 
 
 def env_before_read_docs(app, env, docnames):
@@ -69,12 +74,15 @@ def env_before_read_docs(app, env, docnames):
 
         env.protoparser = ProtoParser(data)
 
+    apitoc.env_before_read_docs(app, env, docnames)
+
 
 def setup(app):
     app.add_config_value("yamcs_api_protobin", None, "env")
     app.add_config_value("yamcs_api_destdir", "http-api", "env")
     app.add_config_value("yamcs_api_title", "HTTP API", "env")
     app.add_config_value("yamcs_api_additional_docs", [], "env")
+    app.add_config_value("yamcs_api_index", True, "env")
 
     app.add_directive("opi", OpiDirective)
     app.add_directive("options", OptionsDirective)
@@ -83,6 +91,7 @@ def setup(app):
     app.add_directive("route", RouteDirective)
     app.add_directive("service", ServiceDirective)
     app.add_directive("websocket", WebSocketDirective)
+    app.add_directive("yamcs-api-toctree", ApiTocTreeDirective)
 
     app.add_lexer("uritemplate", lexers.URITemplateLexer)
     app.add_lexer("urivariable", lexers.URIVariableLexer)
@@ -98,4 +107,7 @@ def setup(app):
 
     app.connect("config-inited", config_inited)
     app.connect("env-before-read-docs", env_before_read_docs)
+    app.connect("env-get-outdated", apitoc.env_get_outdated)
+    app.connect("env-purge-doc", apitoc.env_purge_doc)
+    app.connect("env-merge-info", apitoc.env_merge_info)
     app.connect("html-page-context", html_page_context)
