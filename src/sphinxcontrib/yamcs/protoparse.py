@@ -1,6 +1,6 @@
 from google.protobuf import descriptor_pb2
 
-from sphinxcontrib.yamcs import annotations_pb2
+from sphinxcontrib.yamcs import annotations
 
 DEFAULT_EXCLUDES = [
     ".google.protobuf.Duration",
@@ -84,8 +84,9 @@ class ProtoParser:
     package_by_symbol = {}
 
     def __init__(self, data):
-        self.proto = descriptor_pb2.FileDescriptorSet()
-        self.proto.ParseFromString(data)
+        # Parse with the private pool's message class, so that the
+        # yamcs.api option extensions are recognized.
+        self.proto = annotations.FileDescriptorSet.FromString(data)
 
         for file in self.proto.file:
             for service in file.service:
@@ -185,8 +186,8 @@ class ProtoParser:
         # Transcoding would promote the body field to the actual
         # expected request body. (The actual input_type is in this
         # case only used for query/route parameters).
-        if method_descriptor.options.HasExtension(annotations_pb2.route):
-            route_options = method_descriptor.options.Extensions[annotations_pb2.route]
+        if method_descriptor.options.HasExtension(annotations.route):
+            route_options = method_descriptor.options.Extensions[annotations.route]
             if route_options.HasField("body") and route_options.body != "*":
                 input_descriptor = self.descriptors_by_symbol[
                     method_descriptor.input_type

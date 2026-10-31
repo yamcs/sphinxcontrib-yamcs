@@ -5,7 +5,7 @@ from pathlib import Path
 from sphinx.util.osutil import FileAvoidWrite
 from sphinx.util.template import ReSTRenderer
 
-from sphinxcontrib.yamcs import annotations_pb2, templates
+from sphinxcontrib.yamcs import annotations, templates
 
 
 def camel_to_slug(name, sep="-", lower=True):
@@ -37,12 +37,12 @@ def documented_methods(service):
     """
     methods = []
     for method in service.method:
-        route_options = method.options.Extensions[annotations_pb2.route]
-        ws_options = method.options.Extensions[annotations_pb2.websocket]
+        route_options = method.options.Extensions[annotations.route]
+        ws_options = method.options.Extensions[annotations.websocket]
 
         if not method.options.HasExtension(
-            annotations_pb2.route
-        ) and not method.options.HasExtension(annotations_pb2.websocket):
+            annotations.route
+        ) and not method.options.HasExtension(annotations.websocket):
             continue
 
         if route_options.deprecated or ws_options.deprecated:
@@ -56,7 +56,7 @@ def create_service_file(symbol, service, filename):
     methods = documented_methods(service)
 
     service_name = titlecase(service.name.replace("Api", ""))
-    label = service.options.Extensions[annotations_pb2.label]
+    label = service.options.Extensions[annotations.label]
     if label:
         service_name = label
 
@@ -75,7 +75,7 @@ def create_service_file(symbol, service, filename):
 
 def create_route_file(symbol, method, filename, has_related):
     method_name = titlecase(method.name)
-    label = method.options.Extensions[annotations_pb2.route].label
+    label = method.options.Extensions[annotations.route].label
     if label:
         method_name = label
 
@@ -84,7 +84,7 @@ def create_route_file(symbol, method, filename, has_related):
         "method": method,
         "method_name": method_name,
         "has_related": has_related,
-        "route_options": method.options.Extensions[annotations_pb2.route],
+        "route_options": method.options.Extensions[annotations.route],
     }
     text = YamcsReSTRenderer().render_string(templates.route, context)
     with FileAvoidWrite(filename) as f:
@@ -94,7 +94,7 @@ def create_route_file(symbol, method, filename, has_related):
 
 def create_websocket_file(symbol, method, filename, has_related):
     method_name = titlecase(method.name)
-    label = method.options.Extensions[annotations_pb2.websocket].label
+    label = method.options.Extensions[annotations.websocket].label
     if label:
         method_name = label
 
@@ -103,7 +103,7 @@ def create_websocket_file(symbol, method, filename, has_related):
         "method": method,
         "method_name": method_name,
         "has_related": has_related,
-        "websocket_options": method.options.Extensions[annotations_pb2.websocket],
+        "websocket_options": method.options.Extensions[annotations.websocket],
     }
     text = YamcsReSTRenderer().render_string(templates.websocket, context)
     with FileAvoidWrite(filename) as f:
@@ -150,9 +150,9 @@ def generate(parser, destdir, title, additional_docs, index=True):
                 related_enums = parser.find_enums_related_to_method(symbol)
                 has_related = len(related_types) > 0 or len(related_enums) > 0
 
-                if method.options.HasExtension(annotations_pb2.route):
+                if method.options.HasExtension(annotations.route):
                     create_route_file(symbol, method, methodfile, has_related)
-                elif method.options.HasExtension(annotations_pb2.websocket):
+                elif method.options.HasExtension(annotations.websocket):
                     create_websocket_file(symbol, method, methodfile, has_related)
         else:
             for method in methods:
@@ -164,10 +164,10 @@ def generate(parser, destdir, title, additional_docs, index=True):
                 has_related = len(related_types) > 0 or len(related_enums) > 0
                 method_links.append(camel_to_slug(method.name))
 
-                if method.options.HasExtension(annotations_pb2.route):
+                if method.options.HasExtension(annotations.route):
                     create_route_file(symbol, method, methodfile, has_related)
                     generated_files.append(filename)
-                elif method.options.HasExtension(annotations_pb2.websocket):
+                elif method.options.HasExtension(annotations.websocket):
                     create_websocket_file(symbol, method, methodfile, has_related)
                     generated_files.append(filename)
 

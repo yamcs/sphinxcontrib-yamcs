@@ -10,7 +10,7 @@ from sphinx.directives.code import CodeBlock
 from sphinx.util.docutils import SphinxDirective
 from sphinx.util.nodes import nested_parse_with_titles
 
-from sphinxcontrib.yamcs import annotations_pb2
+from sphinxcontrib.yamcs import annotations
 
 MystParser = get_parser_class("myst")
 
@@ -27,7 +27,7 @@ class ProtoDirective(CodeBlock):
 
 
 def get_uri_templates_for_method_descriptor(descriptor):
-    route = descriptor.options.Extensions[annotations_pb2.route]
+    route = descriptor.options.Extensions[annotations.route]
     uri_templates = [get_uri_template_for_route(route)]
     for route in route.additional_bindings:
         if not route.deprecated:
@@ -36,7 +36,7 @@ def get_uri_templates_for_method_descriptor(descriptor):
 
 
 def get_route_for_method_descriptor(descriptor, addmethod=True):
-    route_options = descriptor.options.Extensions[annotations_pb2.route]
+    route_options = descriptor.options.Extensions[annotations.route]
     return get_uri_template_for_route(route_options, addmethod=addmethod)
 
 
@@ -107,7 +107,7 @@ class RPCDirective(CodeBlock):
             else:
                 excluded_fields = []
 
-                if descriptor.options.HasExtension(annotations_pb2.route):
+                if descriptor.options.HasExtension(annotations.route):
                     route = get_route_for_method_descriptor(descriptor)
                     # Remove route params from the message. Transcoding
                     # fetches them from the URL directly
@@ -191,7 +191,7 @@ class WebSocketDirective(SphinxDirective):
         # From the service, determine if we are to read Markdown
         service_symbol = symbol.rsplit(".", 1)[0]
         service_descriptor = parser.descriptors_by_symbol[service_symbol]
-        markdown = service_descriptor.options.Extensions[annotations_pb2.markdown]
+        markdown = service_descriptor.options.Extensions[annotations.markdown]
 
         comment = parser.find_comment(symbol, prefix="")
         if comment:
@@ -209,7 +209,7 @@ class ServiceDirective(SphinxDirective):
         parser = self.env.protoparser
         descriptor = parser.descriptors_by_symbol[symbol]
 
-        markdown = descriptor.options.Extensions[annotations_pb2.markdown]
+        markdown = descriptor.options.Extensions[annotations.markdown]
 
         comment = parser.find_comment(symbol, prefix="")
         if comment:
@@ -230,7 +230,7 @@ class RouteDirective(SphinxDirective):
         # From the service, determine if we are to read Markdown
         service_symbol = symbol.rsplit(".", 1)[0]
         service_descriptor = parser.descriptors_by_symbol[service_symbol]
-        markdown = service_descriptor.options.Extensions[annotations_pb2.markdown]
+        markdown = service_descriptor.options.Extensions[annotations.markdown]
 
         comment = parser.find_comment(symbol, prefix="")
         if comment:
@@ -258,7 +258,7 @@ class RouteDirective(SphinxDirective):
                 )
             )
 
-        route_options = descriptor.options.Extensions[annotations_pb2.route]
+        route_options = descriptor.options.Extensions[annotations.route]
 
         raw = ".. rubric:: URI Template\n"
         uri_templates = get_uri_templates_for_method_descriptor(descriptor)
