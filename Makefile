@@ -4,7 +4,7 @@ clean:
 	rm -rf build dist *.egg-info
 
 build:
-	python setup.py sdist bdist_wheel
+	python -m build
 
 deploy: clean build
 	twine upload -r pypi dist/*
